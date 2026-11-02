@@ -9,8 +9,8 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -146,6 +146,72 @@ fun BoxWithConstraintsScope.ControlEditor(
         )
     }
 
+    val onAddButton: () -> Unit = {
+        viewModel.addWidget(layers) { layer ->
+            layer.addNormalButton(
+                createWidgetWithUUID { uuid ->
+                    NormalData(
+                        text = createTranslatable(default = defaultButtonName),
+                        uuid = uuid,
+                        position = CenterPosition,
+                        buttonSize = createAdaptiveButtonSize(
+                            referenceLength = screenSize.height,
+                            density = density.density
+                        ),
+                        visibilityType = VisibilityType.ALWAYS,
+                        isSwipple = false,
+                        isPenetrable = false,
+                        isToggleable = false
+                    )
+                }
+            )
+        }
+    }
+
+    val onAddText: () -> Unit = {
+        viewModel.addWidget(layers) { layer ->
+            layer.addTextBox(
+                createWidgetWithUUID { uuid ->
+                    TextData(
+                        text = createTranslatable(default = defaultTextName),
+                        uuid = uuid,
+                        position = CenterPosition,
+                        buttonSize = createAdaptiveButtonSize(
+                            referenceLength = screenSize.height,
+                            density = density.density,
+                            type = ButtonSize.Type.WrapContent //文本框默认使用包裹内容
+                        ),
+                        visibilityType = VisibilityType.ALWAYS
+                    )
+                }
+            )
+        }
+    }
+
+    val onAddJoystick: () -> Unit = {
+        viewModel.addWidget(layers) { layer ->
+            layer.addJoystickButton(
+                createWidgetWithUUID { uuid ->
+                    JoystickData(
+                        uuid = uuid,
+                        position = CenterPosition,
+                        sizeType = ButtonSize.Type.Percentage,
+                        visibilityType = VisibilityType.ALWAYS,
+                        directionEvents = DefaultDirectionEvents,
+                        lockEvents = DefaultLockEvents,
+                    )
+                }
+            )
+        }
+    }
+
+    /** Pojav 风格：没有选择控件层时，自动选择最上层的可编辑控件层 */
+    val ensureLayerSelected: () -> Unit = {
+        if (viewModel.selectedLayer == null) {
+            viewModel.selectedLayer = layers.lastOrNull()
+        }
+    }
+
     EditorMenu(
         state = viewModel.editorMenu,
         closeScreen = { viewModel.editorMenu = MenuState.HIDE },
@@ -165,62 +231,9 @@ fun BoxWithConstraintsScope.ControlEditor(
             layer.editorHide = layer.editorHide.not()
             viewModel.onLayerHideChanged(layer.editorHide, layer)
         },
-        addNewButton = {
-            viewModel.addWidget(layers) { layer ->
-                layer.addNormalButton(
-                    createWidgetWithUUID { uuid ->
-                        NormalData(
-                            text = createTranslatable(default = defaultButtonName),
-                            uuid = uuid,
-                            position = CenterPosition,
-                            buttonSize = createAdaptiveButtonSize(
-                                referenceLength = screenSize.height,
-                                density = density.density
-                            ),
-                            visibilityType = VisibilityType.ALWAYS,
-                            isSwipple = false,
-                            isPenetrable = false,
-                            isToggleable = false
-                        )
-                    }
-                )
-            }
-        },
-        addNewText = {
-            viewModel.addWidget(layers) { layer ->
-                layer.addTextBox(
-                    createWidgetWithUUID { uuid ->
-                        TextData(
-                            text = createTranslatable(default = defaultTextName),
-                            uuid = uuid,
-                            position = CenterPosition,
-                            buttonSize = createAdaptiveButtonSize(
-                                referenceLength = screenSize.height,
-                                density = density.density,
-                                type = ButtonSize.Type.WrapContent //文本框默认使用包裹内容
-                            ),
-                            visibilityType = VisibilityType.ALWAYS
-                        )
-                    }
-                )
-            }
-        },
-        addNewJoystick = {
-            viewModel.addWidget(layers) { layer ->
-                layer.addJoystickButton(
-                    createWidgetWithUUID { uuid ->
-                        JoystickData(
-                            uuid = uuid,
-                            position = CenterPosition,
-                            sizeType = ButtonSize.Type.Percentage,
-                            visibilityType = VisibilityType.ALWAYS,
-                            directionEvents = DefaultDirectionEvents,
-                            lockEvents = DefaultLockEvents,
-                        )
-                    }
-                )
-            }
-        },
+        addNewButton = onAddButton,
+        addNewText = onAddText,
+        addNewJoystick = onAddJoystick,
         openStyleList = viewModel::openStyleList,
         openJoystickStyleList = viewModel::openJoystickStyleList,
         openStyleCabinet = {
@@ -250,17 +263,34 @@ fun BoxWithConstraintsScope.ControlEditor(
         onExit = menuExit,
     )
 
-    MenuBox(
+    PojavEditorCog(
         modifier = Modifier.guideNode(
             key = GuideKeys.Editor.Step.MenuBall,
             holeRadius = 12.dp
         ),
-        position = viewModel.editorBallPosition,
-        onPositionChanged = { viewModel.editorBallPosition = it },
-        opened = viewModel.editorMenu == MenuState.SHOW
-    ) {
-        viewModel.switchMenu()
-    }
+        isPreviewMode = viewModel.isPreviewMode,
+        onAddButton = {
+            ensureLayerSelected()
+            onAddButton()
+        },
+        onAddText = {
+            ensureLayerSelected()
+            onAddText()
+        },
+        onAddJoystick = {
+            ensureLayerSelected()
+            onAddJoystick()
+        },
+        onStyles = viewModel::openStyleList,
+        onAllOptions = { viewModel.editorMenu = MenuState.SHOW },
+        onTogglePreview = {
+            viewModel.applyEditorHide()
+            viewModel.isPreviewMode = !viewModel.isPreviewMode
+        },
+        onSave = { viewModel.save(targetFile, onSaved = {}) },
+        onSaveAndExit = { viewModel.save(targetFile, onSaved = exit) },
+        onExit = menuExit
+    )
 
     EditWidgetDialog(
         data = viewModel.selectedWidget,
