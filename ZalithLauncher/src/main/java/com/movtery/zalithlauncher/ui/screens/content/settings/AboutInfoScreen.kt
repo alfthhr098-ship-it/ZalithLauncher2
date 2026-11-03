@@ -9,8 +9,8 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -77,7 +77,6 @@ import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.CardPositi
 import com.movtery.zalithlauncher.ui.screens.content.settings.layouts.SettingsCard
 import com.movtery.zalithlauncher.ui.theme.itemColor
 import com.movtery.zalithlauncher.ui.theme.onItemColor
-import com.movtery.petlib.R as PetLibR
 
 @Composable
 fun AboutInfoScreen(
@@ -209,7 +208,7 @@ fun AboutInfoScreen(
                             icon = painterResource(R.drawable.img_platform_modrinth),
                             title = "Modrinth App",
                             text = stringResource(R.string.about_acknowledgements_modrinth_text, BuildKeys.LAUNCHER_SHORT_NAME),
-                            openLicense = { openLicense(PetLibR.raw.modrinth_license) },
+                            openLicense = { openLicense(R.raw.modrinth_license) },
                             openLink = { openLink("https://github.com/modrinth/code") },
                         )
                         LinkIconItem(
