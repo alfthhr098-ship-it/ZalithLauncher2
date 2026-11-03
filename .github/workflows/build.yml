@@ -23,7 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ["all", "arm", "arm64", "x86", "x86_64"]
+        # Horus: build arm64 only (most phones). Smaller APK, faster CI.
+        arch: ["arm64"]
       fail-fast: false
 
     env:
