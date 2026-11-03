@@ -18,21 +18,17 @@
 
 package com.movtery.zalithlauncher.ui.screens.main.control_editor
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -287,37 +283,27 @@ fun BoxWithConstraintsScope.ControlEditor(
     EditorDialogHost(viewModel)
 }
 
+/**
+ * Tombol aksi melayang di atas kontrol terpilih (gaya PojavLauncher: kotak abu-abu, teks kapital)
+ */
 @Composable
 private fun ActionButton(
-    painter: Painter,
+    @Suppress("UNUSED_PARAMETER") painter: Painter,
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier.semantics { role = Role.Button },
-        shape = ButtonDefaults.shape,
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = RoundedCornerShape(2.dp),
+        color = PojavEditorGray,
+        contentColor = Color.White,
         onClick = onClick
     ) {
-        Row(
-            modifier = Modifier.padding(all = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                modifier = Modifier
-                    .padding(start = 6.dp)
-                    .size(20.dp),
-                painter = painter,
-                contentDescription = text
-            )
-            Text(
-                modifier = Modifier.padding(end = 6.dp),
-                text = text,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+        Text(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            text = text.uppercase(),
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }
