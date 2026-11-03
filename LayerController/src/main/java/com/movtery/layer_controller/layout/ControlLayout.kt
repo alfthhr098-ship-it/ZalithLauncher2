@@ -24,6 +24,8 @@ import com.movtery.layer_controller.data.JoystickStyle
 import com.movtery.layer_controller.data.lang.EmptyTranslatableString
 import com.movtery.layer_controller.data.lang.TranslatableString
 import com.movtery.layer_controller.data.legacy.LegacySpecial
+import com.movtery.layer_controller.data.legacy.convertZalith1Layout
+import com.movtery.layer_controller.data.legacy.isZalith1Layout
 import com.movtery.layer_controller.layout.ControlLayout.Info
 import com.movtery.layer_controller.observable.Modifiable
 import com.movtery.layer_controller.observable.isModified
@@ -113,7 +115,13 @@ fun loadLayoutFromFile(file: File): ControlLayout {
 
 fun loadLayoutFromString(jsonString: String): ControlLayout {
     val jsonObject = layoutJson.decodeFromString<JsonObject>(jsonString)
-    if (jsonObject["editorVersion"] == null) throw SerializationException("The file does not contain the key \"editorVersion\".")
+    if (jsonObject["editorVersion"] == null) {
+        // Horus: import ZalithLauncher 1 / PojavLauncher control layouts
+        if (isZalith1Layout(jsonObject)) {
+            return convertZalith1Layout(jsonObject)
+        }
+        throw SerializationException("The file does not contain the key \"editorVersion\".")
+    }
     val version = jsonObject["editorVersion"]!!.jsonPrimitive.int
     if (version <= EDITOR_VERSION) {
         val legacyJoystickStyle = if (version < 12) {
