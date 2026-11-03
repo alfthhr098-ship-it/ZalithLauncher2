@@ -49,8 +49,8 @@ dependencies {
 
 /*
  * Rust 交叉编译：经 cargo-ndk 构建 cdylib 并注入 jniLibs。
- * 需要本机安装 rustup、cargo-ndk（cargo install cargo-ndk），
- * 以及四个 Android target（rustup target add <triple>）。
+ * 需要本机安装 rustup（https://rustup.rs）。
+ * cargo-ndk 与四个 Android target 若缺失，构建时会自动安装。
  */
 val rustAbis = mapOf(
     "arm64-v8a" to "aarch64-linux-android",
@@ -84,17 +84,33 @@ val cargoBuild = tasks.register("cargoBuild") {
                 "Rust toolchain is required to build PetLib. Install it from https://rustup.rs and retry."
             )
         }
+
+        // cargo-ndk belum ada -> pasang otomatis
         if (tool("cargo", listOf("ndk", "--version")) == null) {
-            throw GradleException(
-                "cargo-ndk is required to build PetLib. Install it with: cargo install cargo-ndk"
-            )
+            println("cargo-ndk not found, installing it automatically (cargo install cargo-ndk)...")
+            tool("cargo", listOf("install", "cargo-ndk", "--locked"))
+            if (tool("cargo", listOf("ndk", "--version")) == null) {
+                throw GradleException(
+                    "cargo-ndk is required to build PetLib and automatic installation failed. " +
+                        "Install it manually with: cargo install cargo-ndk"
+                )
+            }
         }
+
+        // target Android belum ada -> pasang otomatis
         val installedTargets = tool("rustup", listOf("target", "list", "--installed")) ?: ""
         val missing = rustAbis.values.filter { triple -> !installedTargets.contains(triple) }
         if (missing.isNotEmpty()) {
-            throw GradleException(
-                "Missing Rust Android targets for PetLib. Install them with: rustup target add ${missing.joinToString(" ")}"
-            )
+            println("Installing missing Rust Android targets: ${missing.joinToString(" ")}")
+            tool("rustup", listOf("target", "add") + missing)
+            val after = tool("rustup", listOf("target", "list", "--installed")) ?: ""
+            val stillMissing = rustAbis.values.filter { triple -> !after.contains(triple) }
+            if (stillMissing.isNotEmpty()) {
+                throw GradleException(
+                    "Missing Rust Android targets for PetLib and automatic installation failed. " +
+                        "Install them with: rustup target add ${stillMissing.joinToString(" ")}"
+                )
+            }
         }
 
         val outDir = petlibJniLibs.get().asFile.apply { mkdirs() }
