@@ -9,8 +9,8 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -48,7 +48,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -76,13 +75,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.cardgrid.state.rememberCardGridState
 import com.movtery.guide.GuideSide
 import com.movtery.guide.guideNode
-import com.movtery.petlib.PetAnimation
-import com.movtery.petlib.PetTapReaction
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.Account
 import com.movtery.zalithlauncher.game.account.AccountsManager
 import com.movtery.zalithlauncher.game.account.getAccountTypeName
-import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.setting.AllSettings
@@ -91,7 +87,6 @@ import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedDirection
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.MarqueeText
-import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.animated
 import com.movtery.zalithlauncher.ui.components.rememberAnimatedContext
@@ -110,15 +105,13 @@ import com.movtery.zalithlauncher.ui.screens.content.home.server.LocalServerCard
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardLauncher
 import com.movtery.zalithlauncher.ui.screens.content.home.version.LocalHomeCardVersionSettings
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 private const val ContentWeight = 7f
 private const val ActionMenuWeight = 3f
 
 /**
- * 操作菜单停泊槽位与屏幕边缘的间距
+ * 操作菜单停泊槽位与屏幕边缘的间跑
  */
 private val ActionMenuOuterPadding = 12.dp
 
@@ -569,40 +562,21 @@ private fun ActionMenuTallerContent(
             .then(modifier),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        // 偏航角符号与停泊侧相反，让模型面向屏幕内容一侧
-        val yaw = Math.toRadians(
-            ((if (dockedSide == ActionMenuSide.START) 35.0 else -(35.0)) * (if (isRtl) -1 else 1))
-        ).toFloat()
-
-        val armModel = account?.skinModelType?.toArmModel()
-        val skinStamp = account?.getSkinFile()?.lastModified()
-        val capeStamp = account?.getCapeFile()?.lastModified()
-        val skinBytes by produceState<ByteArray?>(null, account, refreshWardrobe, skinStamp) {
-            value = withContext(Dispatchers.IO) {
-                account?.getSkinFile()?.takeIf { it.exists() }
-                    ?.inputStream()?.use { it.readBytes() }
-            }
-        }
-        val capeBytes by produceState<ByteArray?>(null, account, refreshWardrobe, capeStamp) {
-            value = withContext(Dispatchers.IO) {
-                account?.getCapeFile()?.takeIf { it.exists() }
-                    ?.inputStream()?.use { it.readBytes() }
-            }
-        }
-
-        PetModelView(
+        //大头像展示区域（原 3D 模型预览已移除）
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            skin = skinBytes,
-            cape = capeBytes,
-            arm = armModel,
-            yaw = yaw,
-            animation = PetAnimation.Idle,
-            tapReaction = PetTapReaction.Interact,
-            dragYaw = false
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            if (account != null) {
+                PlayerFace(
+                    account = account,
+                    avatarSize = 112.dp,
+                    refreshKey = refreshWardrobe
+                )
+            }
+        }
 
         BackgroundCard(
             modifier = Modifier
