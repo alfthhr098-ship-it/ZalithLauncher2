@@ -9,8 +9,8 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
@@ -110,8 +110,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.movtery.petlib.ArmModel
-import com.movtery.petlib.PetAnimation
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.account.Account
@@ -129,7 +127,6 @@ import com.movtery.zalithlauncher.game.account.isSkinChangeAllowed
 import com.movtery.zalithlauncher.game.account.wardrobe.EmptyCape
 import com.movtery.zalithlauncher.game.account.wardrobe.SkinModelType
 import com.movtery.zalithlauncher.game.account.wardrobe.capeLocalRes
-import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
 import com.movtery.zalithlauncher.game.account.yggdrasil.PlayerProfile
 import com.movtery.zalithlauncher.game.account.yggdrasil.findUsing
 import com.movtery.zalithlauncher.game.account.yggdrasil.getFile
@@ -143,7 +140,6 @@ import com.movtery.zalithlauncher.ui.components.IconTextButton
 import com.movtery.zalithlauncher.ui.components.ImePanContainer
 import com.movtery.zalithlauncher.ui.components.MarqueeText
 import com.movtery.zalithlauncher.ui.components.OwnOutlinedTextField
-import com.movtery.zalithlauncher.ui.components.PetModelView
 import com.movtery.zalithlauncher.ui.components.PositionButton
 import com.movtery.zalithlauncher.ui.components.PositionFilledTonalButton
 import com.movtery.zalithlauncher.ui.components.RadioCard
@@ -1438,32 +1434,6 @@ fun ChangeSkinDialog(
         }
     }
 
-    // 加载披风
-    val previewCape by produceState<ByteArray?>(null, currentCapeToLoad, availableCapes) {
-        if (!account.isMicrosoftAccount()) return@produceState
-
-        value = withContext(Dispatchers.IO) {
-            if (currentCapeToLoad != EmptyCape) {
-                // 列表已加载完成才会走到这里
-                runCatching {
-                    currentCapeToLoad
-                        .getFile(PathManager.DIR_ACCOUNT_CAPE)
-                        .inputStream()
-                        .use { it.readBytes() }
-                }.getOrNull()
-            } else if (availableCapes == null && account.getCapeFile().exists()) {
-                // 列表就绪前若本地有缓存披风则优先显示，列表加载完或切换时更新 ↑
-                runCatching {
-                    account.getCapeFile()
-                        .inputStream()
-                        .use { it.readBytes() }
-                }.getOrNull()
-            } else {
-                null
-            }
-        }
-    }
-
     val skinPicker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
             uri?.let(onSkinPicked)
@@ -1486,10 +1456,22 @@ fun ChangeSkinDialog(
             }
         }
     }
-    val previewArm = when (skinState) {
-        ChangeSkin.None -> account.skinModelType.toArmModel()
-        is ChangeSkin.ChangeSkinData -> skinState.data.getModelType().toArmModel()
-        ChangeSkin.ResetSkin -> ArmModel.Classic
+
+    // 预览头像（原 3D 模型预览已移除，改为 2D 头像）
+    val previewContext = LocalContext.current
+    val previewDensity = LocalDensity.current
+    val previewFace by produceState<ImageBitmap?>(null, previewSkin, previewDensity) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                val skinBytes = previewSkin
+                val skinBitmap = skinBytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                if (skinBitmap != null) {
+                    getSkinAvatar(skinBitmap, 128.dp, previewDensity)
+                } else {
+                    getDefaultAvatar(previewContext, 128.dp, previewDensity)
+                }
+            }.getOrNull()?.asImageBitmap()
+        }
     }
 
     Dialog(
@@ -1534,15 +1516,14 @@ fun ChangeSkinDialog(
                                 .background(itemColor(false)),
                             contentAlignment = Alignment.Center
                         ) {
-                            PetModelView(
-                                modifier = Modifier.fillMaxSize(),
-                                skin = previewSkin,
-                                cape = previewCape,
-                                arm = previewArm,
-                                animation = PetAnimation.Walking,
-                                animationSpeed = 0.8f,
-                                gazeEnabled = false
-                            )
+                            val face = previewFace
+                            if (face != null) {
+                                Image(
+                                    modifier = Modifier.size(128.dp),
+                                    bitmap = face,
+                                    contentDescription = null
+                                )
+                            }
                         }
 
                         Column(
