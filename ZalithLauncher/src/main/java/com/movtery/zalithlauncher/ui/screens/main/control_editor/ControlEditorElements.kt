@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,8 +79,6 @@ import com.movtery.zalithlauncher.ui.components.MenuTextButton
 import com.movtery.zalithlauncher.ui.components.ScalingActionButton
 import com.movtery.zalithlauncher.ui.components.lazyScrollWithBar
 import com.movtery.zalithlauncher.ui.guide.GuideKeys
-import com.movtery.zalithlauncher.ui.theme.cardColor
-import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.string.isNotEmptyOrBlank
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -284,8 +283,8 @@ private fun EditorMenuContent(
     saveAndExit: () -> Unit,
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = cardColor(false),
-    contentColor: Color = onCardColor()
+    color: Color = PojavEditorGray,
+    contentColor: Color = Color.White
 ) {
     val listState = rememberLazyListState()
     LazyColumn(
@@ -302,8 +301,9 @@ private fun EditorMenuContent(
             }
             .lazyScrollWithBar(listState),
         state = listState,
-        contentPadding = PaddingValues(all = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        //Gaya Pojav: daftar datar, antar item hanya dipisah garis tipis
+        contentPadding = PaddingValues(all = 0.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         //添加按钮
         item(key = "add_button") {
@@ -357,7 +357,7 @@ private fun EditorMenuContent(
         }
 
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         //控件外观列表
@@ -421,7 +421,7 @@ private fun EditorMenuContent(
         }
 
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         //预览控制布局
@@ -510,7 +510,7 @@ private fun EditorMenuContent(
         }
 
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         //控件吸附
@@ -558,7 +558,7 @@ private fun EditorMenuContent(
         }
 
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         //保存
@@ -615,8 +615,8 @@ private fun ColumnScope.ControlLayerMenu(
     createLayer: () -> Unit,
     onAttribute: (ObservableControlLayer) -> Unit,
     onHideSwitch: (ObservableControlLayer) -> Unit,
-    color: Color = cardColor(false),
-    contentColor: Color = onCardColor(),
+    color: Color = PojavEditorGray,
+    contentColor: Color = Color.White,
     enabled: Boolean = true
 ) {
     val lazyListState = rememberLazyListState()
@@ -656,8 +656,8 @@ private fun ColumnScope.ControlLayerMenu(
             .weight(1f)
             .lazyScrollWithBar(lazyListState),
         state = lazyListState,
-        contentPadding = PaddingValues(all = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(all = 0.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         items(layers, { it.uuid }) { layer ->
             ReorderableItem(
@@ -717,13 +717,13 @@ private fun ControlLayerItem(
     onHideSwitch: () -> Unit,
     color: Color,
     contentColor: Color,
-    borderColor: Color = MaterialTheme.colorScheme.primary,
-    shape: Shape = MaterialTheme.shapes.large,
+    borderColor: Color = PojavEditorAccent,
+    shape: Shape = RoundedCornerShape(2.dp),
     shadowElevation: Dp = 0.dp,
     enabled: Boolean = true
 ) {
     val borderWidth by animateDpAsState(
-        if (selected && enabled) 4.dp
+        if (selected && enabled) 2.dp
         else (-1).dp
     )
 
@@ -746,7 +746,7 @@ private fun ControlLayerItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(shape = MaterialTheme.shapes.large)
+                .clip(shape = shape)
                 .padding(all = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
